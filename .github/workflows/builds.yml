@@ -7,7 +7,8 @@ name: Build
 jobs:
   build:
     name: Build contracts
-    runs-on: [self-hosted, heavy]
+#    runs-on: [self-hosted, heavy]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         profile: [mainnet, testnet]
@@ -39,6 +40,9 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
+      - run: |
+          sudo apt-get install tree
+          tree .
       - name: Publish contracts for ${{ github.ref }} release
         uses: svenstaro/upload-release-action@v2
         with:
