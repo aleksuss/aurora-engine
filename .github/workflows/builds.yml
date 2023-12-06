@@ -7,7 +7,7 @@ name: Build
 jobs:
   build:
     name: Build contracts
-    runs-on: [self-hosted, heavy]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         profile: [mainnet, mainnet-silo, testnet, testnet-silo]
@@ -29,7 +29,7 @@ jobs:
 
   publish:
     name: Publish contracts
-    runs-on: [self-hosted, heavy]
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Download artifacts
