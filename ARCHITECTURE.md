@@ -49,7 +49,7 @@ flowchart TD
     Tests["engine-tests / connector tests"] --> Engine
     Tests --> Standalone
     Tests --> TestDoubles["engine-test-doubles"]
-    Tests --> Workspace["engine-workspace"]
+    Tests --> Sim["engine-sim"]
 
     Standalone["standalone storage + tracing"] --> Engine["aurora-engine"]
     Engine --> Transactions["engine-transactions"]
@@ -87,7 +87,7 @@ The main responsibilities are:
 | [`engine-standalone-storage`](engine-standalone-storage/) | RocksDB-backed historical state, transaction metadata, snapshots, diffs, and an `IO` adapter for replay. |
 | [`engine-standalone-tracing`](engine-standalone-tracing/) | Geth-like trace construction from `aurora-evm` tracing events. |
 | [`engine-test-doubles`](engine-test-doubles/) | In-memory implementations of runtime abstractions for unit tests. |
-| [`engine-workspace`](engine-workspace/) | Typed wrappers for deploying and calling the contract with NEAR sandbox. |
+| [`engine-sim`](engine-sim/) | Typed wrappers for deploying and calling the contract with `near-contract-sim`, which runs nearcore's runtime in the test process. |
 | [`engine-tests`](engine-tests/) | WASM, native, standalone-equivalence, Solidity integration, and gas/benchmark coverage. |
 
 The contracts under [`etc/xcc-router`](etc/xcc-router/) and [`etc/tests`](etc/tests/) are separate Cargo projects rather than root workspace members. Solidity sources and embedded ERC-20 artifacts live under [`etc/eth-contracts`](etc/eth-contracts/).
@@ -179,7 +179,7 @@ The test suite exercises the same behavior at progressively wider boundaries:
 | Crate unit tests | In-memory `IO`, fixed `Env`, and test promise handlers | Parsing, arithmetic, storage helpers, precompiles, and focused engine behavior. |
 | `AuroraRunner` | Executes the compiled engine WASM through `near-vm-runner` with mocked external storage | Contract ABI, host behavior, gas profiling, and broad EVM integration tests. |
 | `StandaloneRunner` | Runs shared engine methods against RocksDB-backed state | Replay behavior and equivalence with the WASM/native runner. |
-| `engine-workspace` | Deploys contracts to a real NEAR sandbox through `near-workspaces` | Promises, callbacks, access keys, upgrades, connector flows, and multi-contract behavior. |
+| `engine-sim` | Deploys contracts to nearcore's `Runtime::apply` over an in-memory trie through `near-contract-sim` | Promises, callbacks, access keys, upgrades, ETH connector flows against the released connector contract, and multi-contract behavior without a node, plus a controlled clock and injected receipt faults. |
 | Solidity fixtures | Compiles or loads Solidity contracts and drives them through Ethereum transactions | ERC-20, Uniswap, precompile, and application-level compatibility. |
 
 Many `AuroraRunner` tests also maintain a standalone runner and compare resulting key/value state. This catches divergence between on-chain execution semantics and the replay path.
@@ -210,7 +210,7 @@ Release builds enable LTO, a single codegen unit, overflow checks, abort-on-pani
 - Implement a precompile in `engine-precompiles`, register it in the appropriate hard-fork constructor, and cover address, gas, output, and failure semantics.
 - Put EVM account/state reads and writes behind the helpers in `engine/src/engine.rs` and the key constructors in `engine-types/src/storage.rs`.
 - Update standalone message decoding and compatibility logic whenever an on-chain method or historical input format affects replay.
-- Use `engine-tests` for behavior spanning crates or runtimes; use `engine-workspace` when actual NEAR receipts or callbacks are part of the behavior.
+- Use `engine-tests` for behavior spanning crates or runtimes; use `engine-sim` when actual NEAR receipts or callbacks are part of the behavior.
 
 ## Architectural invariants
 

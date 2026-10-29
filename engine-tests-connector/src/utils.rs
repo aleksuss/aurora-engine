@@ -1,12 +1,14 @@
+use aurora_engine_sim::RawContract;
+use aurora_engine_sim::account::Account;
+use aurora_engine_sim::node::Node;
+use aurora_engine_sim::types::{ExecutionFinalResult, NearToken};
+use aurora_engine_types::account_id::AccountId;
 use aurora_engine_types::parameters::connector::{
     FungibleTokenMetadata, SetEthConnectorContractAccountArgs, WithdrawSerializeType,
 };
 use aurora_engine_types::types::{Address, Wei};
 use near_sdk::json_types::U128;
 use near_sdk::serde_json::json;
-use near_workspaces::network::NetworkClient;
-use near_workspaces::types::NearToken;
-use near_workspaces::{Account, AccountId, Contract, Worker, result::ExecutionFinalResult};
 use std::path::Path;
 use std::sync::LazyLock;
 use tokio::sync::OnceCell;
@@ -40,64 +42,35 @@ static MOCK_CONTROLLER_WASM: LazyLock<Vec<u8>> = LazyLock::new(|| {
 });
 
 pub struct TestContract {
-    pub engine_contract: Contract,
-    pub eth_connector_contract: Contract,
+    pub engine_contract: RawContract,
+    pub eth_connector_contract: RawContract,
     pub controller_account: Account,
     pub owner: Option<Account>,
 }
 
 impl TestContract {
-    async fn deploy_contracts() -> anyhow::Result<(Contract, Contract, Account)> {
-        use near_workspaces::{
-            AccessKey,
-            types::{KeyType, SecretKey},
-        };
-        let worker = near_workspaces::sandbox()
-            .await
-            .map_err(|err| anyhow::anyhow!("Failed init sandbox: {err:?}"))?;
-        let registrar: AccountId = "registrar".parse()?;
-        let sk = SecretKey::from_seed(KeyType::ED25519, registrar.as_str());
-        let registrar = worker
-            .import_contract(&registrar, &worker)
-            .transact()
-            .await?;
-        Self::waiting_account_creation(&worker, registrar.id()).await?;
+    async fn deploy_contracts() -> anyhow::Result<(RawContract, RawContract, Account)> {
+        // The simulator writes the top-level `controller` account into its state
+        // directly, so it needs no registrar.
+        let node = Node::new("controller", NearToken::from_near(100)).await?;
+        let controller_account = node.root();
+        controller_account.deploy(&MOCK_CONTROLLER_WASM).await?;
 
-        let controller: AccountId = "controller".parse()?;
-        registrar
-            .as_account()
-            .batch(&controller)
-            .create_account()
-            .deploy(&MOCK_CONTROLLER_WASM)
-            .add_key(sk.public_key(), AccessKey::full_access())
-            .transfer(NearToken::from_near(100))
-            .transact()
-            .await?
-            .into_result()?;
-
-        let controller_account = Account::from_secret_key(controller, sk, &worker);
         let eth_connector = controller_account
-            .create_subaccount("eth_connector")
-            .initial_balance(NearToken::from_near(15))
-            .transact()
-            .await?
-            .into_result()?;
+            .create_subaccount("eth_connector", NearToken::from_near(15))
+            .await?;
         let engine = controller_account
-            .create_subaccount("engine")
-            .initial_balance(NearToken::from_near(15))
-            .transact()
-            .await?
-            .into_result()?;
+            .create_subaccount("engine", NearToken::from_near(15))
+            .await?;
         let engine_contract_bytes = get_engine_contract();
-        let engine_contract = engine.deploy(&engine_contract_bytes).await?.into_result()?;
+        let engine_contract = engine.deploy(&engine_contract_bytes).await?;
         let eth_connector_contract = eth_connector
             .deploy(
                 CONTRACT_WASM
                     .get_or_try_init(|| download_and_extract_wasm(CONNECTOR_URL, WASM_FILE_NAME))
                     .await?,
             )
-            .await?
-            .into_result()?;
+            .await?;
 
         Ok((engine_contract, eth_connector_contract, controller_account))
     }
@@ -117,11 +90,8 @@ impl TestContract {
         let owner = if let Some(owner) = owner {
             Some(
                 controller_account
-                    .create_subaccount(owner)
-                    .initial_balance(NearToken::from_near(15))
-                    .transact()
-                    .await?
-                    .into_result()?,
+                    .create_subaccount(owner, NearToken::from_near(15))
+                    .await?,
             )
         } else {
             None
@@ -142,7 +112,7 @@ impl TestContract {
             .args_json(json!({
                 "metadata": metadata,
                 "aurora_engine_account_id": engine_contract.id(),
-                "owner_id": owner.as_ref().map_or_else(|| engine_contract.id(), |owner| owner.id()),
+                "owner_id": owner.as_ref().map_or_else(|| engine_contract.id(), Account::id),
                 "controller": controller_account.id(),
             }))
             .max_gas()
@@ -168,7 +138,7 @@ impl TestContract {
         assert!(res.is_success());
 
         let acc = SetEthConnectorContractAccountArgs {
-            account: eth_connector_contract.id().as_str().parse().unwrap(),
+            account: eth_connector_contract.id(),
             withdraw_serialize_type: WithdrawSerializeType::Borsh,
         };
         let res = engine_contract
@@ -187,35 +157,10 @@ impl TestContract {
         })
     }
 
-    /// Waiting for the account creation
-    async fn waiting_account_creation<T: NetworkClient + ?Sized + Send + Sync>(
-        worker: &Worker<T>,
-        account_id: &AccountId,
-    ) -> anyhow::Result<()> {
-        let timer = std::time::Instant::now();
-        // Try to get account within 30 secs
-        for _ in 0..60 {
-            if worker.view_account(account_id).await.is_err() {
-                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-            } else {
-                return Ok(());
-            }
-        }
-
-        anyhow::bail!(
-            "Account `{account_id}` was not created in {:?} sec",
-            timer.elapsed()
-        )
-    }
-
     pub async fn create_sub_account(&self, name: &str) -> anyhow::Result<Account> {
-        Ok(self
-            .controller_account
-            .create_subaccount(name)
-            .initial_balance(NearToken::from_near(15))
-            .transact()
-            .await?
-            .into_result()?)
+        self.controller_account
+            .create_subaccount(name, NearToken::from_near(15))
+            .await
     }
 
     pub async fn deposit_eth_to_near(
@@ -223,9 +168,8 @@ impl TestContract {
         account_id: &AccountId,
         amount: U128,
     ) -> anyhow::Result<ExecutionFinalResult> {
-        Ok(self
-            .controller_account // Only controller can deposit/mint tokens on eth-connector
-            .call(self.eth_connector_contract.id(), "mint")
+        self.controller_account // Only controller can deposit/mint tokens on eth-connector
+            .call(&self.eth_connector_contract.id(), "mint")
             .args_json(json!({
                 "account_id": account_id,
                 "amount": amount,
@@ -234,7 +178,7 @@ impl TestContract {
             .deposit(NearToken::from_yoctonear(1))
             .max_gas()
             .transact()
-            .await?)
+            .await
     }
 
     pub async fn deposit_eth_to_aurora(
@@ -242,9 +186,8 @@ impl TestContract {
         amount: U128,
         recepient: &Address,
     ) -> anyhow::Result<ExecutionFinalResult> {
-        Ok(self
-            .controller_account
-            .call(self.eth_connector_contract.id(), "mint")
+        self.controller_account
+            .call(&self.eth_connector_contract.id(), "mint")
             .args_json(json!({
                 "account_id": self.engine_contract.id(),
                 "amount": amount,
@@ -253,7 +196,7 @@ impl TestContract {
             .deposit(NearToken::from_yoctonear(1))
             .max_gas()
             .transact()
-            .await?)
+            .await
     }
 
     pub fn check_error_message(
@@ -289,12 +232,11 @@ impl TestContract {
     pub async fn get_eth_balance(&self, address: &Address) -> anyhow::Result<u128> {
         let res = self
             .engine_contract
-            .call("ft_balance_of_eth") // `get_balance` returns tha same value but in borsh
+            .view("ft_balance_of_eth") // `get_balance` returns tha same value but in borsh
             .args_borsh((address,))
-            .view()
             .await?;
 
-        res.json::<Wei>().map_err(Into::into).and_then(|res| {
+        res.json::<Wei>().and_then(|res| {
             res.try_into_u128()
                 .map_err(|e| anyhow::anyhow!(e.to_string()))
         })

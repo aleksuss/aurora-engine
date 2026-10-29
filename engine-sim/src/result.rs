@@ -1,13 +1,12 @@
 use aurora_engine_types::borsh::BorshDeserialize;
 use aurora_engine_types::types::Address;
 use aurora_engine_types::{H256, U256};
+use near_gas::NearGas as Gas;
 use near_sdk::{PromiseOrValue, json_types::U128};
-use near_workspaces::result::{
-    ExecutionFinalResult, ExecutionOutcome, ExecutionSuccess, ViewResultDetails,
-};
-use near_workspaces::types::Gas;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
+
+use crate::outcome::{ExecutionFinalResult, ExecutionOutcome, ExecutionSuccess, ViewResultDetails};
 
 #[derive(Debug, Eq, PartialOrd, PartialEq)]
 pub struct ViewResult<T> {
@@ -148,7 +147,7 @@ impl<T> ExecutionResult<T> {
         self.inner.total_gas_burnt
     }
 
-    pub fn outcome(&self) -> &ExecutionOutcome {
+    pub const fn outcome(&self) -> &ExecutionOutcome {
         self.inner.outcome()
     }
 

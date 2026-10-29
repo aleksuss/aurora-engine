@@ -384,10 +384,10 @@ fn test_transfer_erc20_token() {
 
 pub mod workspace {
     use aurora_engine::parameters::{CallArgs, FunctionCallArgsV2};
+    use aurora_engine_sim::account::Account;
+    use aurora_engine_sim::types::{ExecutionFinalResult, NearToken};
+    use aurora_engine_sim::{EngineContract, RawContract};
     use aurora_engine_types::parameters::engine::TransactionStatus;
-    use aurora_engine_workspace::account::Account;
-    use aurora_engine_workspace::types::{ExecutionFinalResult, NearToken};
-    use aurora_engine_workspace::{EngineContract, RawContract};
 
     use super::build_input;
     use crate::prelude::{Address, U256, Wei, WeiU256};

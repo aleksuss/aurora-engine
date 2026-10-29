@@ -1,11 +1,11 @@
 #![allow(clippy::too_many_lines)]
+use aurora_engine_sim::account::Account;
+use aurora_engine_sim::types::NearToken;
+use aurora_engine_sim::{EngineContract, RawContract};
 use aurora_engine_types::parameters::connector::{
     Erc20Identifier, Erc20Metadata, MirrorErc20TokenArgs, SetErc20MetadataArgs,
     WithdrawSerializeType,
 };
-use aurora_engine_workspace::account::Account;
-use aurora_engine_workspace::types::NearToken;
-use aurora_engine_workspace::{EngineContract, RawContract};
 
 use crate::prelude::U256;
 use crate::tests::erc20_connector::workspace::{erc20_balance, exit_to_near};

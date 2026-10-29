@@ -19,6 +19,7 @@ use crate::operation::{
     ViewView,
 };
 use crate::transaction::{CallTransaction, ViewTransaction};
+use crate::types::{ExecutionFinalResult, SecretKey};
 use aurora_engine_types::account_id::AccountId;
 use aurora_engine_types::parameters::connector::{
     Erc20Identifier, MirrorErc20TokenArgs, PausedMask, SetErc20MetadataArgs,
@@ -37,7 +38,6 @@ use aurora_engine_types::public_key::PublicKey;
 use aurora_engine_types::types::{Address, RawU256, WeiU256};
 use aurora_engine_types::{H256, U256};
 use near_sdk::json_types::U128;
-use near_workspaces::types::SecretKey;
 use serde_json::json;
 
 #[derive(Debug, Clone)]
@@ -71,20 +71,14 @@ impl EngineContract {
 
     #[must_use]
     pub fn create_account(&self, account_id: &AccountId, secret_key: SecretKey) -> Account {
-        let inner = near_workspaces::Account::from_secret_key(
-            account_id.as_ref().parse().unwrap(),
-            secret_key,
-            self.node.worker(),
-        );
-
-        Account::from_inner(inner)
+        self.node.account(account_id, secret_key)
     }
 
     pub async fn deposit_to_near(
         &self,
         receipient_id: &AccountId,
         amount: u64,
-    ) -> anyhow::Result<near_workspaces::result::ExecutionFinalResult> {
+    ) -> anyhow::Result<ExecutionFinalResult> {
         let eth_connector_id = self.get_eth_connector_contract_account().await?.result;
         self.account
             .call(&eth_connector_id, "mint") // The 'mint' works here, because
@@ -542,27 +536,25 @@ impl EngineContract {
 
 #[derive(Debug, Clone)]
 pub struct RawContract {
-    inner: near_workspaces::Contract,
+    account: Account,
 }
 
 impl RawContract {
     #[must_use]
-    pub const fn from_contract(contract: near_workspaces::Contract) -> Self {
-        Self { inner: contract }
+    pub const fn from_account(account: Account) -> Self {
+        Self { account }
     }
 
     pub fn call<F: AsRef<str>>(&self, function: F) -> CallTransaction {
-        let call_tx = self.inner.call(function.as_ref());
-        CallTransaction::new(call_tx)
+        self.account.call(&self.id(), function)
     }
 
     pub fn view<F: AsRef<str>>(&self, function: F) -> ViewTransaction<'_> {
-        let view_tx = self.inner.view(function.as_ref());
-        ViewTransaction::new(view_tx)
+        self.account.view(&self.id(), function)
     }
 
     #[must_use]
     pub fn id(&self) -> AccountId {
-        self.inner.id().as_str().parse().unwrap()
+        self.account.id()
     }
 }

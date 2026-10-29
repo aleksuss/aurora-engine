@@ -1055,13 +1055,13 @@ pub mod workspace {
         deploy_engine, deploy_erc20_from_nep_141, deploy_nep_141, nep_141_balance_of,
     };
     use aurora_engine_sdk::types::near_account_to_evm_address;
+    use aurora_engine_sim::types::NearToken;
+    use aurora_engine_sim::{EngineContract, RawContract, account::Account};
     use aurora_engine_types::parameters::silo::{
         Erc20FallbackAddressArgs, SiloParamsArgs, WhitelistAddressArgs, WhitelistArgs,
         WhitelistKind, WhitelistStatusArgs,
     };
     use aurora_engine_types::types::Address;
-    use aurora_engine_workspace::types::NearToken;
-    use aurora_engine_workspace::{EngineContract, RawContract, account::Account};
 
     const FT_ACCOUNT: &str = "test_token";
     const FT_TOTAL_SUPPLY: u128 = 1_000_000;

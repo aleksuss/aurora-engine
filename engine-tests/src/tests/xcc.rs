@@ -1,4 +1,5 @@
 use aurora_engine_precompiles::xcc::{costs, cross_contract_call};
+use aurora_engine_sim::types::NearToken;
 use aurora_engine_transactions::legacy::TransactionLegacy;
 use aurora_engine_types::U256;
 use aurora_engine_types::account_id::AccountId;
@@ -8,7 +9,6 @@ use aurora_engine_types::parameters::{
     SimpleNearPromise,
 };
 use aurora_engine_types::types::{Address, EthGas, NearGas, Wei, Yocto};
-use aurora_engine_workspace::types::NearToken;
 use near_vm_runner::ContractCode;
 use near_vm_runner::logic::mocks::mock_external::MockAction;
 use std::fs;
@@ -413,6 +413,8 @@ pub mod workspace {
         nep_141_balance_of, transfer_nep_141_to_erc_20,
     };
     use aurora_engine_precompiles::xcc::cross_contract_call;
+    use aurora_engine_sim::types::NearToken;
+    use aurora_engine_sim::{EngineContract, RawContract};
     use aurora_engine_transactions::legacy::TransactionLegacy;
     use aurora_engine_types::U256;
     use aurora_engine_types::account_id::AccountId;
@@ -422,8 +424,6 @@ pub mod workspace {
         PromiseWithCallbackArgs, SimpleNearPromise,
     };
     use aurora_engine_types::types::{Address, NearGas, Wei, Yocto};
-    use aurora_engine_workspace::types::NearToken;
-    use aurora_engine_workspace::{EngineContract, RawContract};
     use serde_json::json;
     use std::path::Path;
 

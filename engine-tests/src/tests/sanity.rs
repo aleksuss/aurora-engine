@@ -1189,12 +1189,12 @@ mod workspace {
     use crate::prelude::{Address, U256};
     use crate::tests::sanity::{GAS_PRICE, INITIAL_BALANCE, INITIAL_NONCE, TRANSFER_AMOUNT};
     use crate::utils;
+    use aurora_engine_sim::EngineContract;
     use aurora_engine_types::parameters::engine::TransactionStatus;
-    use aurora_engine_workspace::EngineContract;
 
     // Same as `test_eth_transfer_insufficient_balance` above, except runs through
-    // `aurora-engine-workspace` instead of `near-vm-runner`. This is important because
-    // `aurora-engine-workspace` has more production logic, in particular, state revert on
+    // `aurora-engine-sim` instead of `near-vm-runner`. This is important because
+    // `aurora-engine-sim` has more production logic, in particular, state revert on
     // contract panic.
     // TODO: should be able to generalize the `call` backend of `AuroraRunner` so that this
     //       test does not need to be written twice.
@@ -1235,7 +1235,7 @@ mod workspace {
     }
 
     // Same as `test_eth_transfer_charging_gas_not_enough_balance` but run through
-    // `aurora-engine-workspace`.
+    // `aurora-engine-sim`.
     #[tokio::test]
     async fn test_eth_transfer_charging_gas_not_enough_balance() {
         let (aurora, mut signer, address) = initialize_engine().await;

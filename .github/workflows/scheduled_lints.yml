@@ -7,12 +7,8 @@ on:
 name: Scheduled checks
 jobs:
   tests:
-    name: Run tests (${{ matrix.version }} neard)
+    name: Run tests
     runs-on: runs-on=${{ github.run_id }}/runner=rust-near-integration-special-64cpu-256gb
-    strategy:
-      fail-fast: false
-      matrix:
-        version: [ mainnet, testnet ]
     steps:
       - name: Setup RunsOn
         uses: runs-on/action@v2
@@ -31,7 +27,6 @@ jobs:
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          key: ${{matrix.version}}
           cache-on-failure: "true"
           cache-all-crates: "true"
       - name: Setup Node
@@ -48,8 +43,6 @@ jobs:
           cache-dependency-path: |
             etc/eth-contracts/yarn.lock
             etc/tests/uniswap/yarn.lock
-      - name: Build actual neard-sandbox
-        run: scripts/build-neard-sandbox.sh ${{ matrix.version }}
       - name: Install cargo-make
         run: cargo +stable make -V || cargo +stable install cargo-make
       - name: Run tests

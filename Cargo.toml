@@ -14,10 +14,10 @@ aurora-engine-hashchain = { path = "engine-hashchain", default-features = false 
 aurora-engine-modexp = { path = "engine-modexp", version = "1.3.0", default-features = false }
 aurora-engine-precompiles = { path = "engine-precompiles", version = "2.2.0", default-features = false }
 aurora-engine-sdk = { path = "engine-sdk", version = "2.0.1", default-features = false }
+aurora-engine-sim = { path = "engine-sim" }
 aurora-engine-test-doubles = { path = "engine-test-doubles" }
 aurora-engine-transactions = { path = "engine-transactions", version = "1.4.0", default-features = false }
 aurora-engine-types = { path = "engine-types", version = "3.0.0", default-features = false }
-aurora-engine-workspace = { path = "engine-workspace" }
 engine-standalone-storage = { path = "engine-standalone-storage" }
 engine-standalone-tracing = { path = "engine-standalone-tracing", default-features = false, features = ["impl-serde"] }
 
@@ -43,14 +43,14 @@ hex = { version = "0.4", default-features = false, features = ["alloc"] }
 ibig = { version = "0.3", default-features = false, features = ["num-traits"] }
 impl-serde = { version = "0.5", default-features = false }
 libsecp256k1 = { version = "0.7", default-features = false }
-near-crypto = "0.38.0-rc.3"
+near-contract-sim = { git = "https://github.com/near/near-contract-sim", rev = "02e875b41c085a8650ec5c96cc5455578b59d028" }
+near-crypto = "0.38.0"
 near-gas = "0.3"
-near-parameters = "0.38.0-rc.3"
-near-primitives = "0.38.0-rc.3"
-near-primitives-core = "0.38.0-rc.3"
-near-sdk = "5"
-near-vm-runner = "0.38.0-rc.3"
-near-workspaces = "0.23"
+near-parameters = "0.38.0"
+near-primitives = "0.38.0"
+near-primitives-core = "0.38.0"
+near-sdk = "5.30"
+near-vm-runner = "0.38.0"
 num = { version = "0.4", default-features = false, features = ["alloc"] }
 postgres = "0.19"
 primitive-types = { version = "0.13", default-features = false, features = ["rlp", "serde_no_std"] }
@@ -100,13 +100,13 @@ members = [
     "engine-modexp",
     "engine-precompiles",
     "engine-sdk",
+    "engine-sim",
     "engine-standalone-storage",
     "engine-standalone-tracing",
     "engine-tests",
     "engine-tests-connector",
     "engine-transactions",
     "engine-types",
-    "engine-workspace",
 ]
 
 exclude = [

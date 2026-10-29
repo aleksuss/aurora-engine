@@ -1,10 +1,10 @@
+use aurora_engine_sim::account::Account;
+use aurora_engine_sim::{EngineContract, RawContract, types::NearToken};
 use aurora_engine_types::U256;
 use aurora_engine_types::account_id::AccountId;
 use aurora_engine_types::parameters::connector::{FungibleTokenMetadata, WithdrawSerializeType};
 use aurora_engine_types::parameters::engine::DeployErc20TokenArgs;
 use aurora_engine_types::types::Address;
-use aurora_engine_workspace::account::Account;
-use aurora_engine_workspace::{EngineContract, RawContract, types::NearToken};
 use serde_json::json;
 use tokio::sync::OnceCell;
 
@@ -25,7 +25,7 @@ static ETH_CONNECTOR_WASM: OnceCell<Vec<u8>> = OnceCell::const_new();
 /// Deploy Aurora smart contract with external eth-connector.
 pub async fn deploy_engine_with_code(code: Vec<u8>) -> EngineContract {
     let chain_id = AuroraRunner::get_default_chain_id();
-    let contract = aurora_engine_workspace::EngineContractBuilder::new()
+    let contract = aurora_engine_sim::EngineContractBuilder::new()
         .unwrap()
         .with_chain_id(chain_id)
         .with_code(code)

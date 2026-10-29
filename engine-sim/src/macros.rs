@@ -29,10 +29,11 @@ macro_rules! impl_view_return  {
 
         impl<'a> std::future::IntoFuture for $name<'a> {
             type Output = anyhow::Result<ViewResult<$return>>;
-            type IntoFuture = near_workspaces::rpc::BoxFuture<'a, Self::Output>;
+            type IntoFuture = std::future::Ready<Self::Output>;
 
             fn into_future(self) -> Self::IntoFuture {
-                Box::pin(async { ViewResult::$deserialize_fn(self.0.await?) }.into_future())
+                let view = std::future::IntoFuture::into_future(self.0).into_inner();
+                std::future::ready(view.and_then(ViewResult::$deserialize_fn))
             }
         })*
     };
@@ -60,7 +61,7 @@ macro_rules! impl_call_return  {
             }
 
             #[must_use]
-            pub fn deposit(mut self, deposit: near_workspaces::types::NearToken) -> Self {
+            pub fn deposit(mut self, deposit: $crate::types::NearToken) -> Self {
                 self.0 = self.0.deposit(deposit);
                 self
             }
@@ -108,7 +109,7 @@ macro_rules! impl_call_return  {
             }
 
             #[must_use]
-            pub fn deposit(mut self, deposit: near_workspaces::types::NearToken) -> Self {
+            pub fn deposit(mut self, deposit: $crate::types::NearToken) -> Self {
                 self.0 = self.0.deposit(deposit);
                 self
             }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changes
+
+- Replaced `aurora-engine-workspace` with `aurora-engine-sim`, which runs the NEAR integration tests, the ETH connector ones included, in-process on nearcore's runtime through `near-contract-sim` instead of a `neard` sandbox, removed `near-workspaces`, and updated the NEAR dependencies to 0.38.0 by [@aleksuss].
+
 ### Fixes
 
 - Fixed replayable failed contract deployments: creation transactions with oversized init code (EIP-3860) or with a `value` the sender cannot cover after the gas prepayment are now rejected before execution (`CREATE_CONTRACT_LIMIT` / `ERR_OUT_OF_FUND`) instead of charging gas without consuming the nonce by [@mrLSD].

@@ -19,10 +19,10 @@ aurora-engine-hashchain = { workspace = true, features = ["std"] }
 aurora-engine-modexp = { workspace = true, features = ["std"] }
 aurora-engine-precompiles = { workspace = true, features = ["std"] }
 aurora-engine-sdk = { workspace = true, features = ["std"] }
+aurora-engine-sim.workspace = true
 aurora-engine-test-doubles.workspace = true
 aurora-engine-transactions = { workspace = true, features = ["std", "impl-serde"] }
 aurora-engine-types = { workspace = true, features = ["std", "impl-serde"] }
-aurora-engine-workspace.workspace = true
 
 anyhow.workspace = true
 borsh.workspace = true

@@ -1,10 +1,10 @@
 use crate::utils::workspace::deploy_engine;
+use aurora_engine_sim::types::{KeyType, NearToken, SecretKey};
 use aurora_engine_types::parameters::engine::{
     FullAccessKeyArgs, RelayerKeyArgs, RelayerKeyManagerArgs, SetUpgradeDelayBlocksArgs,
 };
 use aurora_engine_types::public_key::PublicKey;
 use aurora_engine_types::types::Address;
-use aurora_engine_workspace::types::{KeyType, NearToken, SecretKey};
 use std::fmt::Debug;
 use std::str::FromStr;
 
